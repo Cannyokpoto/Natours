@@ -25,7 +25,7 @@ class APIFeatures {
     //sorting
     sort() {
       if (this.queryString.sort) {
-        const sortBy = req.queryString.sort.split(",").join(" ");
+        const sortBy = this.queryString.sort.split(",").join(" ");
         this.query = this.query.sort(sortBy);
       } else {
         this.query = this.query.sort("-price");
