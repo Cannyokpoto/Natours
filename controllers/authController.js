@@ -58,8 +58,9 @@ exports.signup = catchAsync(async (req, res, next) => {
   createSendToken(newUser, 201, res);
 });
 
-//login controller
 
+
+//login controller
 exports.login = catchAsync(async (req, res, next) => {
   // const email = req.body.email;
   // const password = req.body.password;
@@ -81,6 +82,7 @@ exports.login = catchAsync(async (req, res, next) => {
   //3) if everything is okay, send token to client
   createSendToken(user, 200, res);
 });
+
 
 //Protected route controller
 exports.protect = catchAsync(async (req, res, next) => {

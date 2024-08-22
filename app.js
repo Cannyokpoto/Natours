@@ -7,8 +7,9 @@ const app = express();
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
-const tourRouter = require('./routes/tourRoutes')
-const userRouter = require('./routes/userRoutes')
+const tourRouter = require('./routes/tourRoutes');
+const userRouter = require('./routes/userRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 const AppError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorController')
@@ -72,6 +73,7 @@ app.use((req, res, next)=>{
 //Mounting routers
 app.use('/api/tours', tourRouter);
 app.use('/api/users', userRouter);
+app.use('/api/reviews', reviewRouter);
 
 //custom response for all undefined routes
 app.all('*', (req, res, next) =>{

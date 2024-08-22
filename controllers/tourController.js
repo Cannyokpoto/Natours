@@ -4,7 +4,8 @@ const Tour = require("./../models/tourModel");
 const { match } = require("assert");
 const APIFeatures = require('./../utils/apiFeatures')
 const catchAsync = require('./../utils/catchAsync')
-const AppError = require('./../utils/appError')
+const AppError = require('./../utils/appError');
+const path = require("path");
 
 //Reading a file
 // const tours = JSON.parse(
@@ -64,8 +65,11 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 
 //get a single tour
 exports.getOneTour = catchAsync(async (req, res, next) => {
- 
-    const singleTour = await Tour.findById(req.params.id);
+
+    const singleTour = await Tour.findById(req.params.id).populate("reviews");
+    
+    const searchID = req.params.id;
+    console.warn('searchID:', searchID)
 
     if(!singleTour){
       return next(new AppError(`No tour found with ID ${req.params.id}`, 404))

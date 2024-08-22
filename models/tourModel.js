@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+// const User = require('./userModel')
 
 
 //Schema
@@ -79,7 +80,42 @@ const tourSchema = new mongoose.Schema({
         default: Date.now()
     },
     
-    startDates: [Date]
+    startDates: [Date],
+
+    startLocation: {
+        // GeoJSON
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point']
+        },
+        coordinates: [Number], //expoecting logitude first before latitude [long, lat]
+        address: String,
+        description: String
+      },
+      locations: [
+        {
+          type: {
+            type: String,
+            default: 'Point',
+            enum: ['Point']
+          },
+          coordinates: [Number],
+          address: String,
+          description: String,
+          day: Number
+        }
+      ],
+
+      //To reference tour guide IDs from the User model
+      guides: [
+        {
+            type: mongoose.Schema.ObjectId,
+            ref: 'User'
+        }
+      ],
+
+
 }, {
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
@@ -92,6 +128,16 @@ tourSchema.virtual('durationWeeks').get(function() {
     return this.duration / 7;
 })
 
+//to virtually populate all the reviews belonging to each tour without persisting it to the database
+tourSchema.virtual('reviews', {
+    //Review model
+    ref: 'Review',
+    //where the tour ID is stored in the reviewModel
+    foreignField: 'tour',
+    //where the tour ID is stored in the tourModel
+    localField: '_id'
+})
+
 //Creating a Document middleware. This middleware runs before .save() and .create() but will 
 // not run if there's .insertMany()
 
@@ -100,6 +146,17 @@ tourSchema.pre('save', function(next) {
     this.slug = slugify(this.name, { lower: true });
     next()
 })
+
+//middleware to embed tour guides (users) in the tour document on "save"
+// tourSchema.pre('save', async function (next){
+//     //This is an async operation so looping through the array of guides IDs will return many promises
+//     //so we use the "Promise" constructor to get each promise returned.
+//     const guidesPromises = this.guides.map(async eachId => await User.findById(eachId));
+//     this.guides = await Promise.all(guidesPromises);
+
+//     next()
+// })
+  
 
 //using the post-save hook or middleware
 // tourSchema.post('save', function(doc, next) {
@@ -111,11 +168,25 @@ tourSchema.pre('save', function(next) {
 //Creating a Query middleware.
 // tourSchema.pre('find', function(next) {
 tourSchema.pre(/^find/, function(next) {
+    //to exclude all secret tours from query results
     this.find({ secretTour: { $ne: true } });
 
     this.start = Date.now();
     next();
 })
+
+
+//the "populate" method helps to query for the tour guides with the specified IDs in the "guides" property of the tour model
+tourSchema.pre(/^find/, function(next) {
+    this.populate({
+        //to hide some properties
+        path: 'guides',
+        select: '-__v -passwordChangedAt'
+      });
+    next();
+})
+
+
 
 tourSchema.post(/^find/, function(docs, next) {
     console.log(`The query took about ${Date.now() - this.start} milliseconds`)
