@@ -46,6 +46,9 @@ const reviewSchema = new mongoose.Schema({
 });
 
 
+//Index to prevent a user from making multiple reviews on a single tour.
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 
 //the "populate" method helps to query for the tour guides with the specified IDs in the "guides" property of the tour model
 reviewSchema.pre(/^find/, function(next) {
@@ -108,7 +111,7 @@ reviewSchema.statics.calcAverageRatings = async function(tourId) {
 //to recalculate the ratingsAverage for a particular document when a review is edited or deleted
 //we have to use the pre-middleware hook to gain access to the tourId in the query params
 reviewSchema.pre(/^findOneAnd/, async function(next) {
-    this.r = await this.findOne();
+    this.rev = await this.findOne();
     // console.log(this.r);
     next();
   });
@@ -116,7 +119,7 @@ reviewSchema.pre(/^findOneAnd/, async function(next) {
 //we can now use the post-middleware hook to call the calcAverageRatings function again, since we have access to the tourId and the document has been saved.
   reviewSchema.post(/^findOneAnd/, async function() {
     // await this.findOne(); does NOT work here, query has already executed
-    await this.r.constructor.calcAverageRatings(this.r.tour);
+    await this.rev.constructor.calcAverageRatings(this.rev.tour);
 });
 
 
