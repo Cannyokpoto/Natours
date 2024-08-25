@@ -204,12 +204,12 @@ tourSchema.post(/^find/, function(docs, next) {
 })
 
 
-//Creating a Aggregation middleware.
-tourSchema.pre('aggregate', function(next) {
-    this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//Creating an Aggregation middleware.
+// tourSchema.pre('aggregate', function(next) {
+//     this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
 
-    next();
-})
+//     next();
+// })
 
 
 //Creating a model out of the schema

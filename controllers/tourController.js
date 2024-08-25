@@ -133,7 +133,7 @@ exports.getToursWithin = catchAsync(async (req, res, next) => {
   if (!lat || !lng) {
     next(
       new AppError(
-        'Please provide latitutr and longitude in the format lat,lng.',
+        'Please provide latitute and longitude in the format lat,lng.',
         400
       )
     );
@@ -159,22 +159,27 @@ exports.getDistances = catchAsync(async (req, res, next) => {
   const { latlng, unit } = req.params;
   const [lat, lng] = latlng.split(',');
 
+  //the distance gotten from geospatial aggregation pipeline will always come in meters, so it must be converted to both miles and km
+  //0.001 converts meters to km while 0.000621371 converts meters to miles
   const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
 
   if (!lat || !lng) {
     next(
       new AppError(
-        'Please provide latitutr and longitude in the format lat,lng.',
+        'Please provide latitute and longitude in the format lat,lng.',
         400
       )
     );
   }
 
+  //using aggregation pipeline
   const distances = await Tour.aggregate([
     {
+      //geoNear should always be the first geospatial aggregation pipeline stage.
       $geoNear: {
         near: {
           type: 'Point',
+          //multiplying the coordinates by 1 to convert them to numbers
           coordinates: [lng * 1, lat * 1]
         },
         distanceField: 'distance',
@@ -191,6 +196,7 @@ exports.getDistances = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
+    result: distances.length,
     data: {
       data: distances
     }
