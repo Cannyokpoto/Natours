@@ -107,6 +107,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   //3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
+  console.warn('currentUser:', currentUser);
   if (!currentUser) {
     return next(new AppError("The user with this token no longer exist.", 401));
   }

@@ -119,7 +119,16 @@ const tourSchema = new mongoose.Schema({
 }, {
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
-})
+});
+
+
+//creating index on certain fields to improve read performance
+//We only set index on frequently queried fields
+//where 1 is sorting in ascending order and -1 is descending order.
+// tourSchema.index({ price: 1 });
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+// tourSchema.index({ startLocation: '2dsphere' });
 
 
 //To create virtual properties. Fields that you do not want to store in the database but 
