@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
+router.get("/logout", authController.logout);
 
 router.post("/forgot-password", authController.forgotPassword);
 router.patch("/reset-password/:token", authController.resetPassword);
@@ -16,15 +17,18 @@ router.use(authController.protect);
 
 router.patch("/update-password", authController.updatePassword);
 
-router.patch("/update-me", userController.updateMe);
+router.patch(
+  "/update-me",
+  userController.uploadUserPhoto,
+  userController.resizeUserPhoto,
+  userController.updateMe
+);
 
 router.delete("/delete-me", userController.deleteMe);
 
-
-
 //to restrict the routes below to only admin
 //only the admin can perform these actions
-router.use(authController.restrictTo('admin'));
+router.use(authController.restrictTo("admin"));
 
 router
   .route("/")

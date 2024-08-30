@@ -1,4 +1,5 @@
 
+const path = require('path');
 const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -7,18 +8,31 @@ const app = express();
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
+const viewRouter = require('./routes/viewRoutes');
+const cors = require('cors');
 
 const AppError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorController')
 
+//template engine
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 
 //Global middlewares
 
+//for serving static files
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Set security HTTP headers
 app.use(helmet());
+
+
+// Use the CORS middleware with desired options
+app.use(cors());
 
 //development logging
 if(process.env.NODE_ENV==='development'){
@@ -37,6 +51,12 @@ const limiter = rateLimit({
 //Body parser, reading data from body into req.body
 // 10kb specifies the maximum size of data that should be passed in the request body.
 app.use(express.json({ limit: '10kb' }));
+
+//to encode data from HTML forms
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+//to parse cookies
+app.use(cookieParser());
 
 // Data sanitization against NoSQL query injection like malicious queries such as "email": { "$gt": "" } for login
 app.use(mongoSanitize());
@@ -60,17 +80,34 @@ app.use(
     })
   );
 
-//for serving static files
-app.use(express.static(`${__dirname}/public`))
 
 // test middleware
 app.use((req, res, next)=>{
     req.requestTime = new Date().toISOString();
+    console.log(req.cookies);
     next()
 })
 
 
 //Mounting routers
+// app.get('/', (req, res,) =>{
+//   res.status(200).render('base', {
+//     tour: "The forest hiker",
+//     user: "Promise"
+//   });
+// });
+
+// app.get('/overview', (req, res,) =>{
+//   res.status(200).render('overview');
+// })
+
+// app.get('/tour', (req, res,) =>{
+//   res.status(200).render('tour', {
+//     title: "The forest hiker"
+//   });
+// })
+
+app.use('/', viewRouter);
 app.use('/api/tours', tourRouter);
 app.use('/api/users', userRouter);
 app.use('/api/reviews', reviewRouter);

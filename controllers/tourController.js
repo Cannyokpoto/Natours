@@ -1,12 +1,93 @@
 const fs = require("fs");
-
-const Tour = require("./../models/tourModel");
+const path = require("path");
+const multer = require("multer");
+const sharp = require("sharp");
 const { match } = require("assert");
+const Tour = require("./../models/tourModel");
 const APIFeatures = require('./../utils/apiFeatures')
 const catchAsync = require('./../utils/catchAsync')
 const AppError = require('./../utils/appError');
 const factory = require('./handlerFactory');
-const path = require("path");
+
+
+
+//to store image in memory (as a buffer) for compression and resizing before saving
+const multerStorage = multer.memoryStorage();
+
+//multer filter
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(new AppError("Not an image. Please upload only images.", 400));
+  }
+};
+
+//image upload screening area
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+// to finally upload image file
+//upload.single is used to upload a single image to one field in a model (e.g: 1 imageCover), accesible at req.file
+//upload.array is used to upload multiple images to one field in a model (e.g: 3 tour images), accesible at req.files
+//upload.fields is used to upload images to multiple fields in a model (e.g: 1 imageCover, 3 tour images), accesible at req.files
+exports.uploadTourImages = upload.fields([
+  {name: 'imageCover', maxCount: 1},
+  {name: 'images', maxCount: 3}
+]);
+
+
+//to resize uploaded images
+exports.resizeTourImages = catchAsync(async (req, res, next)=>{
+
+  if (!req.files.imageCover || !req.files.images) return next();
+
+  //1) IMAGE COVER
+  //req.body.imageCover is defined here to assign a value (the file name) to imageCover field in the req body
+  req.body.imageCover = `tour-${req.params.id}-${Date.now()}.jpeg`;
+
+  //retreiving image from memory
+  await sharp(req.files.imageCover[0].buffer)
+    //crop image to 500px by 500px
+    .resize(500, 500)
+    //set format to jpeg
+    .toFormat("jpeg")
+    //compress to reduce file size
+    .jpeg({ quality: 90 })
+    //write to this directory
+    .toFile(`public/img/tours/${req.body.imageCover}`);
+
+
+    //2) IMAGES
+    //req.body.images is initialized with an empty array so file names can be pushed in later
+    req.body.images = [];
+
+    //processing the 3 images will return 3 promises
+    const tourImagesPromises = await req.files.images.map(async (file, i) =>{
+      const filename = `tour-${req.params.id}-${Date.now()}-${i + 1}.jpeg`
+
+      //retreiving image from memory
+        await sharp(file.buffer)
+        //crop image to 500px by 500px
+        .resize(500, 500)
+        //set format to jpeg
+        .toFormat("jpeg")
+        //compress to reduce file size
+        .jpeg({ quality: 90 })
+        //write to this directory
+        .toFile(`public/img/tours/${filename}`);
+
+        //here the empty images array is filled with the file names
+        req.body.images.push(filename);
+    });
+
+    // the 3 returned promises a received here
+    await Promise.all(tourImagesPromises);
+
+  next()
+});
 
 
 //middleware to get top 5 cheap tours

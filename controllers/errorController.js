@@ -32,35 +32,67 @@ const handleJWTExpiredError = err => new AppError('Your token has expired, pleas
 
 
 //development error
-const sendErrorDev = (err, res) => {
-    res.status(err.statusCode).json({
-      status: err.status,
-      error: err,
-      message: err.message,
-      stack: err.stack
-    });
-  };
-  
-  //Production error
-  const sendErrorProd = (err, res) => {
-    // Operational, trusted error: send message to client
-    if (err.isOperational) {
+const sendErrorDev = (err, req, res) => {
+    //For API response only
+    if(req.originalUrl.startsWith('/api')){
       res.status(err.statusCode).json({
         status: err.status,
-        message: err.message
+        error: err,
+        message: err.message,
+        stack: err.stack
       });
-  
-      // Programming or other unknown error: don't leak error details
-    } else {
-      // 1) Log error
-      console.error('ERROR 💥', err);
-  
-      // 2) Send generic message
-      res.status(500).json({
-        status: 'error',
-        message: 'Something went wrong!'
-      });
+
+    }else{
+      //For the interface
+      res.status(err.statusCode).render('error', {
+        title: 'Something went wrong!',
+        msg: err.message
+      })
     }
+  };
+  
+
+  //Production error
+  const sendErrorProd = (err, req, res) => {
+    // Operational, trusted error: send message to client
+    // if (err.isOperational) {
+    //   res.status(err.statusCode).json({
+    //     status: err.status,
+    //     message: err.message
+    //   });
+  
+    //   // Programming or other unknown error: don't leak error details
+    // } else {
+    //   // 1) Log error
+    //   console.error('ERROR 💥', err);
+    //   console.warn('prod. error:', err);
+  
+    //   // 2) Send generic message
+    //   res.status(500).json({
+    //     status: 'error',
+    //     message: 'Something went wrong!'
+    //   });
+    // }
+
+
+    //THE CODE I COMMENTED OUT ABOVE IS STILL VERY USEFUL. I MIGHT NEED IT LATER.
+
+    //For API response only
+    if(req.originalUrl.startsWith('/api')){
+      res.status(err.statusCode).json({
+        status: err.status,
+        error: err,
+        message: err.message,
+        stack: err.stack
+      });
+    }else{
+      //For the interface
+      res.status(err.statusCode).render('error', {
+        title: 'Something went wrong!',
+        msg: err.message
+      })
+    }
+
   };
 
 
@@ -70,7 +102,7 @@ module.exports = (err, req, res, next) =>{
     err.status = err.status || 'error';
 
     if (process.env.NODE_ENV === 'development') {
-        sendErrorDev(err, res);
+        sendErrorDev(err, req, res);
       } else if (process.env.NODE_ENV === 'production') {
 
         // let error = { ...err };
@@ -83,6 +115,6 @@ module.exports = (err, req, res, next) =>{
 
         
 
-        sendErrorProd(err, res);
+        sendErrorProd(err, req, res);
       }
 }
