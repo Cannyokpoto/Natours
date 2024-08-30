@@ -2,7 +2,7 @@ node_modules
 views
 .cache
 config.env
-public/js/bundle
+public/js/bundle.js
 public/js/bundle.js.map
-public/js/mapbox
+public/js/mapbox.js
 dev-data/data/templates
