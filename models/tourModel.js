@@ -198,10 +198,10 @@ tourSchema.pre(/^find/, function(next) {
 
 
 
-tourSchema.post(/^find/, function(docs, next) {
-    console.log(`The query took about ${Date.now() - this.start} milliseconds`)
-    next();
-})
+// tourSchema.post(/^find/, function(docs, next) {
+//     console.log(`The query took about ${Date.now() - this.start} milliseconds`)
+//     next();
+// })
 
 
 //Creating an Aggregation middleware.
