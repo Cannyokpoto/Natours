@@ -30,6 +30,12 @@ app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
 //Global middlewares
+// to enable cross origin requests; so other domains can access our API on the browser.
+app.use(cors());
+
+//to allow all non-simple req like (delete, patch etc)
+//the 'options' http method notifies the server that a non-simple request is about to be made
+app.options('*', cors());
 
 //for serving static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -37,9 +43,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Set security HTTP headers
 app.use(helmet());
 
-
-// Use the CORS middleware with desired options
-app.use(cors());
 
 //development logging
 if(process.env.NODE_ENV==='development'){
