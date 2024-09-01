@@ -4,7 +4,6 @@ const express = require('express');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
-const app = express();
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
@@ -16,10 +15,15 @@ const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const bookingRouter = require('./routes/bookingRoutes');
 const viewRouter = require('./routes/viewRoutes');
-
-
 const AppError = require('./utils/appError')
 const globalErrorHandler = require('./controllers/errorController')
+
+
+//the express application
+const app = express();
+
+//to trust proxies
+app.enable('trust proxy');
 
 //template engine
 app.set('view engine', 'pug');
@@ -84,7 +88,7 @@ app.use(
   );
 
 
-  //to compress all responses sent to client
+  //to compress all responses (texts not images or other files) sent to client
   app.use(compression())
   
 

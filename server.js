@@ -59,3 +59,13 @@ process.on('unhandledRejection', err =>{
         process.exit(1);
     });
 });
+
+
+//this configuration is specific to heroku. SIGTERM event is when the server is about to do its routine (every 24hrs) shut down.
+//to keep the application healthy
+process.on('SIGTERM', () => {
+    console.log('👋 SIGTERM RECEIVED. Shutting down gracefully');
+    server.close(() => {
+      console.log('💥 Process terminated!');
+    });
+  });
